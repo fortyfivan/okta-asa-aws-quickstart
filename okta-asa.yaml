@@ -1,15 +1,88 @@
 #This CloudFormation template deploys the complete infrastructure
 AWSTemplateFormatVersion: '2010-09-09' 
 
+# Parameter Groups
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "VPC Parameters"
+        Parameters:
+          - AvailabilityZone1
+          - AvailabilityZone2
+          - VPCCIDR
+          - PrivateAZ1CIDR
+          - PrivateAZ2CIDR
+          - PublicAZ1CIDR
+          - PublicAZ2CIDR
+      - Label:
+          default: "Instance Parameters"
+        Parameters:
+          - BastionHostsInstanceType
+          - PrivateInstancesType
+          - BastionHostsAMI
+          - BastionHostsKey
+          - PrivateInstancesKey
+          - PrivateInstancesAMI
+      - Label:
+          default: "Okta Advanced Server Access Parameters"
+        Parameters:
+          - EnrollmentToken
+          - BastionName
+          - TargetServer1Name
+          - TargetServer2Name
+      - Label:
+          default: "AWS Quick Start Configuration"
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+
 #VPC Parameters
 
 Parameters:
   AvailabilityZone1:
     Type: AWS::EC2::AvailabilityZone::Name
     Description: Availability Zone 1
+
   AvailabilityZone2:
     Type: AWS::EC2::AvailabilityZone::Name
     Description: Availability Zone 2
+
+  VPCCIDR:
+    Type: String 
+    Description: CIDR Block for the VPC
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$
+    Default: 10.0.0.0/16
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+
+  PrivateAZ1CIDR:
+    Type: String 
+    Description: CIDR Block for the Private Subnet in AZ1
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$
+    Default: 10.0.128.0/20
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+
+  PrivateAZ2CIDR:
+    Type: String 
+    Description: CIDR Block for the Private Subnet in AZ2
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$
+    Default: 10.0.128.0/19
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+
+  PublicAZ1CIDR:
+    Type: String 
+    Description: CIDR Block for the Public Subnet in AZ1
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$
+    Default: 10.0.144.0/20
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
+
+  PublicAZ2CIDR:
+    Type: String 
+    Description: CIDR Block for the Public Subnet in AZ2
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$
+    Default: 10.0.144.0/19
+    ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
 
 #VPC Resources Parameters
 
@@ -55,12 +128,12 @@ Parameters:
   BstionHostsAMI:
     Type: AWS::EC2::Image::Id
     Description: Amazon EC2 image ID for Bastion Hosts
-    Default: ami-0d8f6eb4f641ef691
+    Default: ami-05c1fa8df71875112
 
   PrivateInstancesAMI:
     Type: AWS::EC2::Image::Id
     Description: Amazon EC2 image ID for instances in the private subnet
-    Default: ami-0d8f6eb4f641ef691
+    Default: ami-05c1fa8df71875112
 
 Resources:
   
@@ -68,7 +141,7 @@ Resources:
   VPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: 10.0.0.0/16
+      CidrBlock: !Ref VPCCIDR
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags:
@@ -91,7 +164,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.0.128.0/20
+      CidrBlock: !Ref PublicAZ1CIDR
       AvailabilityZone: !Ref AvailabilityZone1     
       Tags:
       - Key: Name
@@ -101,7 +174,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.0.0.0/19
+      CidrBlock: !Ref PrivateAZ1CIDR
       AvailabilityZone: !Ref AvailabilityZone1 
       Tags:
       - Key: Name
@@ -167,7 +240,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.0.144.0/20
+      CidrBlock: !Ref PublicAZ2CIDR
       AvailabilityZone: !Ref AvailabilityZone2     
       Tags:
       - Key: Name
@@ -177,7 +250,7 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 10.0.32.0/19
+      CidrBlock: !Ref PrivateAZ2CIDR
       AvailabilityZone: !Ref AvailabilityZone2
       Tags:
       - Key: Name
