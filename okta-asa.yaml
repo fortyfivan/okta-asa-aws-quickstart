@@ -137,6 +137,7 @@ Resources:
       Tags:
       - Key: Name
         Value: vpc
+
   #Internet Gateway and Attachment
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -159,6 +160,7 @@ Resources:
       Tags:
       - Key: Name
         Value: public-subnet-az-1
+
   #Private Subnet AZ1
   PrivateSubnetAZ1:
     Type: AWS::EC2::Subnet
@@ -169,6 +171,7 @@ Resources:
       Tags:
       - Key: Name
         Value: private-subnet-az-1
+
   #Public Route Table
   PublicRouteTableAZ1:
     Type: AWS::EC2::RouteTable
@@ -184,6 +187,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTableAZ1
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
+
   #Private Route Table
   PrivateRouteTableAZ1:
     Type: AWS::EC2::RouteTable
@@ -198,6 +202,7 @@ Resources:
       RouteTableId: !Ref PrivateRouteTableAZ1
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NATGatewayAZ1
+
   #NAT Gateway
   NATGatewayAZ1:
    Type: AWS::EC2::NatGateway
@@ -211,6 +216,7 @@ Resources:
     Type: AWS::EC2::EIP
     Properties:
       Domain: VPC
+
   #Route Table Association
   PublicSubnetRouteTableAssociationAZ1:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -235,6 +241,7 @@ Resources:
       Tags:
       - Key: Name
         Value: public-subnet-az-2
+
   #Private Subnet AZ2
   PrivateSubnetAZ2:
     Type: AWS::EC2::Subnet
@@ -245,6 +252,7 @@ Resources:
       Tags:
       - Key: Name
         Value: private-subnet-az-2
+
   #Public Route Table
   PublicRouteTableAZ2:
     Type: AWS::EC2::RouteTable
@@ -260,6 +268,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTableAZ2
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
+
   #Private Route Table
   PrivateRouteTableAZ2:
     Type: AWS::EC2::RouteTable
@@ -274,6 +283,7 @@ Resources:
       RouteTableId: !Ref PrivateRouteTableAZ2
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NATGatewayAZ2
+
   #NAT Gateway
   NATGatewayAZ2:
    Type: AWS::EC2::NatGateway
@@ -287,6 +297,7 @@ Resources:
     Type: AWS::EC2::EIP
     Properties:
       Domain: VPC
+
   #Route Table Association
   PublicSubnetRouteTableAssociationAZ2:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -299,11 +310,11 @@ Resources:
       SubnetId: !Ref PrivateSubnetAZ2
       RouteTableId: !Ref PrivateRouteTableAZ2
   
-  #Bastion Security Group
-  BastionSecurityGroup:
+  #Instance Security Group
+  InstanceSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: Enables SSH Access to Bastion Hosts
+      GroupDescription: Enables SSH Access to Hosts
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -313,8 +324,8 @@ Resources:
       SecurityGroupEgress: 
         - IpProtocol: tcp
           CidrIp: 0.0.0.0/0
-          FromPort: 0
-          ToPort: 65535
+          FromPort: 443
+          ToPort: 443
 
 #VPC Resources
 
@@ -355,7 +366,7 @@ Resources:
           DeviceIndex: 0
           SubnetId: !Ref PublicSubnetAZ1
           GroupSet:
-            - !GetAtt BastionSecurityGroup.GroupId
+            - !GetAtt InstanceSecurityGroup.GroupId
       LaunchTemplate:
         LaunchTemplateId: !Ref BastionHostsLaunchTemplate
         Version: !GetAtt BastionHostsLaunchTemplate.LatestVersionNumber
@@ -371,6 +382,8 @@ Resources:
       ImageId: !Ref PrivateInstancesAMI
       InstanceType: !Ref PrivateInstancesType
       KeyName: !Ref PrivateInstancesKey
+      SecurityGroupIds:
+        - !GetAtt InstanceSecurityGroup.GroupId
       Tags: 
         - Key: Name
           Value: !Ref TargetServer1Name
@@ -404,7 +417,7 @@ Resources:
           DeviceIndex: 0
           SubnetId: !Ref PublicSubnetAZ2
           GroupSet:
-            - !GetAtt BastionSecurityGroup.GroupId
+            - !GetAtt InstanceSecurityGroup.GroupId
       LaunchTemplate:
         LaunchTemplateId: !Ref BastionHostsLaunchTemplate
         Version: !GetAtt BastionHostsLaunchTemplate.LatestVersionNumber
@@ -420,6 +433,8 @@ Resources:
       ImageId: !Ref PrivateInstancesAMI
       InstanceType: !Ref PrivateInstancesType
       KeyName: !Ref PrivateInstancesKey
+      SecurityGroupIds:
+        - !GetAtt InstanceSecurityGroup.GroupId
       Tags: 
         - Key: Name
           Value: !Ref TargetServer2Name
