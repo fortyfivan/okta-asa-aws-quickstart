@@ -22,8 +22,8 @@ Metadata:
           - PrivateInstanceType
           - BastionHostAMI
           - BastionHostKey
-          - PrivateInstanceKey
           - PrivateInstanceAMI
+          - PrivateInstanceKey
       - Label:
           default: "Okta Advanced Server Access Parameters"
         Parameters:
@@ -65,12 +65,12 @@ Parameters:
   
   BastionHostName:
     Type: String
-    Description: The Okta name for the bastion host
+    Description: The canonical name for the bastion host
     Default: asa-bastion
   
   TargetServerName:
     Type: String
-    Description: The Okta name for the target instance
+    Description: The canonical name for the target instance
     Default: asa-target
 
   BastionHostInstanceType:
